@@ -85,9 +85,9 @@ function new_order()
   local w_tax
 
   c_discount, c_last, c_credit, w_tax = con:query_row(([[SELECT c_discount, c_last, c_credit, w_tax 
-                                                           FROM customer%d, warehouse%d
+                                                           FROM customer%d AS c
+							   JOIN warehouse%d AS w ON c_w_id=w_id
                                                           WHERE w_id = %d 
-                                                            AND c_w_id = w_id 
                                                             AND c_d_id = %d 
                                                             AND c_id = %d]]):
                                                          format(table_num, table_num, w_id, d_id, c_id))
@@ -106,6 +106,11 @@ function new_order()
                                            AND d_id = %d FOR UPDATE]]):
                                         format(table_num, w_id, d_id))
 
+   if ( d_next_o_id == nil ) then
+       con:query("COMMIT")
+       return
+   end
+   
 -- UPDATE district SET d_next_o_id = :d_next_o_id + 1
 --                WHERE d_id = :d_id 
 --                AND d_w_id = :w_id;
@@ -179,7 +184,12 @@ function new_order()
 	                                                      FROM stock%d  
 	                                                     WHERE s_i_id = %d AND s_w_id= %d FOR UPDATE]]):
 	                                                     format(string.format("%02d",d_id),table_num,ol_i_id,ol_supply_w_id ))
-     
+
+        if ( s_quantity == nil ) then
+	    con:query("COMMIT")
+	    return
+	end
+	
         s_quantity=tonumber(s_quantity)
   	if (s_quantity > ol_quantity) then
 	        s_quantity = s_quantity - ol_quantity
@@ -322,7 +332,11 @@ function payment()
 
 	for i = 1,  (namecnt / 2 ) + 1 do
 		row = rs:fetch_row()
-		c_id = row[1]
+		if ( row ~= nil ) then
+		  c_id = row[1]
+		else
+		  c_id = 0
+		end
 	end
   end -- byname
 
@@ -350,6 +364,11 @@ function payment()
 			     AND c_id=%d FOR UPDATE]])
 			 :format(table_num, w_id, c_d_id, c_id ))
 
+  if (c_balance == nil ) then
+      con:query("COMMIT")
+      return
+  end
+  
   c_balance = tonumber(c_balance) - h_amount
   c_ytd_payment = tonumber(c_ytd_payment) + h_amount
 
@@ -463,10 +482,12 @@ function orderstatus()
         end
         for i = 1,  (namecnt / 2 ) + 1 do
             row = rs:fetch_row()
-            c_balance = row[1]
-            c_first = row[2]
-            c_middle = row[3]
-            c_id = row[4]
+	    if ( row ~= nil ) then
+              c_balance = row[1]
+              c_first = row[2]
+              c_middle = row[3]
+              c_id = row[4]
+	    end
         end
     else
 --		SELECT c_balance, c_first, c_middle, c_last
@@ -633,12 +654,13 @@ function delivery()
                                            AND ol_d_id = %d 
                                            AND ol_w_id = %d]])
                                       :format(table_num, no_o_id, d_id, w_id))
-
+        
 --	UPDATE customer SET c_balance = c_balance + :ol_total ,
 --		                             c_delivery_cnt = c_delivery_cnt + 1
 --		                WHERE c_id = :c_id AND c_d_id = :d_id AND
 --				c_w_id = :w_id;*/
---        print(string.format("update customer table %d, cid %d, did %d, wid %d balance %f",table_num, o_c_id, d_id, w_id, sm_ol_amount))  				
+--        print(string.format("update customer table %d, cid %d, did %d, wid %d balance %f",table_num, o_c_id, d_id, w_id, sm_ol_amount))
+        if (sm_ol_amount ~= nil and o_c_id ~=nil and d_id ~= nil ) then
         con:query(([[UPDATE customer%d 
                         SET c_balance = c_balance + %f,
                             c_delivery_cnt = c_delivery_cnt + 1
@@ -646,6 +668,7 @@ function delivery()
                         AND c_d_id = %d 
                         AND c_w_id = %d]])
                       :format(table_num, sm_ol_amount, o_c_id, d_id, w_id))
+	end
         end
         
     end
@@ -679,23 +702,29 @@ function stocklevel()
              	                    WHERE d_id = %d AND d_w_id= %d]])
 		                  :format( table_num, d_id, w_id))
 
+    if ( d_next_o_id == nil ) then 
+      con:query("COMMIT")
+      return
+    end
+    
     if stock_level_queries == "case1" then 
 
 --[[
      SELECT COUNT(DISTINCT (s_i_id)) INTO :stock_count
-     FROM order_line, stock
-     WHERE ol_w_id=:w_id AND ol_d_id=:d_id AND ol_o_id<:o_id AND  ol_o_id>=:o_id-20 AND s_w_id=:w_id AND s_i_id=ol_i_id AND s_quantity < :threshold;
+     FROM order_line
+     JOIN stock ON s_i_id=ol_i_id
+     WHERE ol_w_id=:w_id AND ol_d_id=:d_id AND ol_o_id<:o_id AND  ol_o_id>=:o_id-20 AND s_w_id=:w_id AND s_quantity < :threshold;
 --]]
 
-    rs = con:query(([[SELECT COUNT(DISTINCT (s_i_id))
-                        FROM order_line%d, stock%d
-                       WHERE ol_w_id = %d 
-                         AND ol_d_id = %d
-                         AND ol_o_id < %d 
-                         AND ol_o_id >= %d
-                         AND s_w_id= %d
-                         AND s_i_id=ol_i_id 
-                         AND s_quantity < %d ]])
+    rs = con:query(([[SELECT COUNT(DISTINCT(s.s_i_id))
+			FROM stock%d AS s
+                        JOIN order_line%d AS ol ON ol.ol_w_id=s.s_w_id AND ol.ol_i_id=s.s_i_id			
+                       WHERE ol.ol_w_id = %d 
+                         AND ol.ol_d_id = %d
+                         AND ol.ol_o_id < %d 
+                         AND ol.ol_o_id >= %d
+                         AND s.s_w_id= %d
+                         AND s.s_quantity < %d ]])
 		:format(table_num, table_num, w_id, d_id, d_next_o_id, d_next_o_id - 20, w_id, level ))
 
 

@@ -74,9 +74,9 @@ function cmd_prepare()
    local con = drv:connect()
    local show_query="SHOW TABLES"
 
-   if drv:name() == "mysql" then 
-      con:query("SET FOREIGN_KEY_CHECKS=0")
-   end
+   -- if drv:name() == "mysql" then 
+   --     con:query("SET FOREIGN_KEY_CHECKS=0")
+   -- end
 
    -- create tables in parallel table per thread
    for i = sysbench.tid % sysbench.opt.threads + 1, sysbench.opt.tables,
@@ -366,7 +366,7 @@ function set_isolation_level(drv,con)
        
         isolation_variable=con:query_row("SHOW VARIABLES LIKE 't%_isolation'")
 
-        con:query("SET SESSION " .. isolation_variable .. "='".. isolation_level .."'")
+        -- con:query("SET SESSION " .. isolation_variable .. "='".. isolation_level .."'")
    end
 
    if drv:name() == "pgsql"
@@ -542,7 +542,24 @@ function load_tables(drv, con, warehouse_num)
    end 
    con:bulk_insert_done()
 
-   con:query(string.format("INSERT INTO new_orders%d (no_o_id, no_d_id, no_w_id) SELECT o_id, o_d_id, o_w_id FROM orders%d WHERE o_id>2100 and o_w_id=%d", table_num, table_num, warehouse_num))
+--		SELECT c_id
+--		FROM customer
+--		WHERE c_w_id = :c_w_id 
+--		AND c_d_id = :c_d_id 
+--		AND c_last = :c_last
+--		ORDER BY c_first;
+
+    rs = con:query(([[SELECT o_id, o_d_id, o_w_id
+        		   FROM orders%d
+			   WHERE o_id > 2100 AND o_w_id=%d]]):format(table_num,warehouse_num))
+    if (rs.nrows > 0) then 			   
+      for i = 1, rs.nrows do
+        row = rs:fetch_row()
+	if (row ~= nil) then
+            con:query(string.format("INSERT INTO new_orders%d (no_o_id, no_d_id, no_w_id) VALUES (%d,%d,%d)",table_num,row[1],row[2],row[3]))
+	end
+      end
+   end
 
    con:bulk_insert_init("INSERT INTO order_line" .. table_num .. [[
 	  (ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id, ol_supply_w_id, ol_delivery_d, 
@@ -585,9 +602,9 @@ function cleanup()
    local drv = sysbench.sql.driver()
    local con = drv:connect()
 
-   if drv:name() == "mysql" then 
-      con:query("SET FOREIGN_KEY_CHECKS=0")
-   end
+   -- if drv:name() == "mysql" then 
+   --    con:query("SET FOREIGN_KEY_CHECKS=0")
+   -- end
 
    for i = 1, sysbench.opt.tables do
       print(string.format("Dropping tables '%d'...", i))
