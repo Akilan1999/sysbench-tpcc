@@ -121,7 +121,7 @@ function create_tables(drv, con, table_num)
    local engine_def = ""
    local extra_table_options = ""
    local query
-   local tinyint_type="smallint"
+   local tinyint_type="int"
    local datetime_type="timestamp"   
    
    if drv:name() == "mysql" or drv:name() == "attachsql" or
@@ -129,7 +129,7 @@ function create_tables(drv, con, table_num)
    then
       engine_def = "/*! ENGINE = " .. sysbench.opt.mysql_storage_engine .. " */"
       extra_table_options = sysbench.opt.mysql_table_options or ""
-      tinyint_type="tinyint"
+      tinyint_type="int"
       datetime_type="datetime"
    end
 
@@ -137,7 +137,7 @@ function create_tables(drv, con, table_num)
 
    query = string.format([[
 	CREATE TABLE IF NOT EXISTS warehouse%d (
-	w_id smallint not null,
+	w_id int not null,
 	w_name varchar(10), 
 	w_street_1 varchar(20), 
 	w_street_2 varchar(20), 
@@ -155,7 +155,7 @@ function create_tables(drv, con, table_num)
    query = string.format([[
 	create table IF NOT EXISTS district%d (
 	d_id ]] .. tinyint_type .. [[ not null, 
-	d_w_id smallint not null, 
+	d_w_id int not null, 
 	d_name varchar(10), 
 	d_street_1 varchar(20), 
 	d_street_2 varchar(20), 
@@ -175,9 +175,9 @@ function create_tables(drv, con, table_num)
 
    query = string.format([[
 	create table IF NOT EXISTS customer%d (
-	c_id int not null, 
+	c_id bigint not null, 
 	c_d_id ]] .. tinyint_type .. [[ not null,
-	c_w_id smallint not null, 
+	c_w_id int not null, 
 	c_first varchar(16), 
 	c_middle char(2), 
 	c_last varchar(16), 
@@ -206,17 +206,17 @@ function create_tables(drv, con, table_num)
    local hist_auto_inc=""
    local hist_pk=""
    if sysbench.opt.force_pk == 1 then
-      hist_auto_inc="id int NOT NULL AUTO_INCREMENT,"
+      hist_auto_inc="id bigint NOT NULL AUTO_INCREMENT,"
       hist_pk=",PRIMARY KEY(id)"
    end
    query = string.format([[
 	create table IF NOT EXISTS history%d (
         %s
-	h_c_id int, 
+	h_c_id bigint, 
 	h_c_d_id ]] .. tinyint_type .. [[, 
-	h_c_w_id smallint,
+	h_c_w_id int,
 	h_d_id ]] .. tinyint_type .. [[,
-	h_w_id smallint,
+	h_w_id int,
 	h_date ]] .. datetime_type .. [[,
 	h_amount decimal(6,2), 
 	h_data varchar(24) %s
@@ -229,8 +229,8 @@ function create_tables(drv, con, table_num)
 	create table IF NOT EXISTS orders%d (
 	o_id int not null, 
 	o_d_id ]] .. tinyint_type .. [[ not null, 
-	o_w_id smallint not null,
-	o_c_id int,
+	o_w_id int not null,
+	o_c_id bigint,
 	o_entry_d ]] .. datetime_type .. [[,
 	o_carrier_id ]] .. tinyint_type .. [[,
 	o_ol_cnt ]] .. tinyint_type .. [[, 
@@ -247,7 +247,7 @@ function create_tables(drv, con, table_num)
 	create table IF NOT EXISTS new_orders%d (
 	no_o_id int not null,
 	no_d_id ]] .. tinyint_type .. [[ not null,
-	no_w_id smallint not null,
+	no_w_id int not null,
 	PRIMARY KEY(no_w_id, no_d_id, no_o_id)
 	) %s %s]],
       table_num, engine_def, extra_table_options)
@@ -258,10 +258,10 @@ function create_tables(drv, con, table_num)
 	create table IF NOT EXISTS order_line%d ( 
 	ol_o_id int not null, 
 	ol_d_id ]] .. tinyint_type .. [[ not null,
-	ol_w_id smallint not null,
+	ol_w_id int not null,
 	ol_number ]] .. tinyint_type .. [[ not null,
 	ol_i_id int, 
-	ol_supply_w_id smallint,
+	ol_supply_w_id int,
 	ol_delivery_d ]] .. datetime_type .. [[, 
 	ol_quantity ]] .. tinyint_type .. [[, 
 	ol_amount decimal(6,2), 
@@ -276,8 +276,8 @@ function create_tables(drv, con, table_num)
 
    query = string.format([[
 	create table IF NOT EXISTS stock%d (
-	s_i_id int not null, 
-	s_w_id smallint not null, 
+	s_i_id bigint not null, 
+	s_w_id int not null, 
 	s_quantity smallint, 
 	s_dist_01 char(24), 
 	s_dist_02 char(24),
