@@ -26,7 +26,6 @@ typedef uint32_t useconds_t;
 int usleep(useconds_t useconds);
 ]]
 
-
 function init()
    assert(event ~= nil,
           "this script is meant to be included by other TPCC scripts and " ..
@@ -40,6 +39,15 @@ end
 MAXITEMS=100000
 DIST_PER_WARE=10
 CUST_PER_DIST=3000
+RETRY_COUNT=10
+
+function with_retry(f)
+  for r=1,RETRY_COUNT do
+     if ( f() == 0 ) then
+       break
+     end
+  end
+end
 
 -- Command line options
 sysbench.cmdline.options = {
@@ -324,10 +332,10 @@ function create_tables(drv, con, table_num)
  
       query = string.format([[(%d,%d,'%s',%f,'%s')]],
 	j, i_im_id, i_name:sub(1,24), i_price, i_data:sub(1,50))
-      con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
 		 
    end
-   con:bulk_insert_done()
+   with_retry(con:bulk_insert_done())
 
     print(string.format("Adding indexes %d ... \n", i))
     con:query("CREATE INDEX idx_customer"..i.." ON customer"..i.." (c_w_id,c_d_id,c_last,c_first)")
@@ -407,9 +415,10 @@ function load_tables(drv, con, warehouse_num)
 	warehouse_num, sysbench.rand.string("name-@@@@@"), sysbench.rand.string("street1-@@@@@@@@@@"),
         sysbench.rand.string("street2-@@@@@@@@@@"), sysbench.rand.string("city-@@@@@@@@@@"),
         sysbench.rand.string("@@"),sysbench.rand.string("zip-#####"),sysbench.rand.uniform_double()*0.2 )
-      con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
+
 		 
-    con:bulk_insert_done()
+    with_retry(con:bulk_insert_done())
 
     con:bulk_insert_init("INSERT INTO district" .. table_num .. 
 	" (d_id, d_w_id, d_name, d_street_1, d_street_2, d_city, d_state, d_zip, d_tax, d_ytd, d_next_o_id) values")
@@ -420,10 +429,11 @@ function load_tables(drv, con, warehouse_num)
 	d_id, warehouse_num, sysbench.rand.string("name-@@@@@"), sysbench.rand.string("street1-@@@@@@@@@@"),
         sysbench.rand.string("street2-@@@@@@@@@@"), sysbench.rand.string("city-@@@@@@@@@@"),
         sysbench.rand.string("@@"),sysbench.rand.string("zip-#####"),sysbench.rand.uniform_double()*0.2 )
-      con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
+
 
    end
- con:bulk_insert_done()
+ with_retry(con:bulk_insert_done())
 
 -- CUSTOMER TABLE
 
@@ -455,12 +465,13 @@ function load_tables(drv, con, warehouse_num)
 	string.rep(sysbench.rand.string("@"),sysbench.rand.uniform(300,500))
         
         )
-      con:bulk_insert_next(query)
+
+      with_retry(function() return con:bulk_insert_next(query) end)
 
    end 
    end
 
-   con:bulk_insert_done()
+   with_retry(con:bulk_insert_done())
 
 -- HISTORY TABLE
 
@@ -474,12 +485,12 @@ function load_tables(drv, con, warehouse_num)
 	c_id, d_id, warehouse_num, d_id, warehouse_num, 
 	string.rep(sysbench.rand.string("@"),sysbench.rand.uniform(12,24))
         )
-      con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
 
    end 
    end
 
-   con:bulk_insert_done()
+   with_retry(con:bulk_insert_done())
 
     local tab = {}
     local a_counts = {}
@@ -509,12 +520,13 @@ function load_tables(drv, con, warehouse_num)
         o_id < 2101 and sysbench.rand.uniform(1,10) or "NULL",
         a_counts[warehouse_num][d_id][o_id]
         )
-      con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
+
 
    end 
    end
 
-   con:bulk_insert_done()
+   with_retry(con:bulk_insert_done())
 
 -- STOCK table
 
@@ -537,10 +549,11 @@ function load_tables(drv, con, warehouse_num)
 	string.rep(sysbench.rand.string("@"),24),
 	string.rep(sysbench.rand.string("@"),24),
 	string.rep(sysbench.rand.string("@"),sysbench.rand.uniform(26,50)))
-      con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
 
-   end 
-   con:bulk_insert_done()
+   end
+
+   with_retry(con:bulk_insert_done())
 
 --		SELECT c_id
 --		FROM customer
@@ -575,13 +588,13 @@ function load_tables(drv, con, warehouse_num)
         o_id < 2101 and 0 or sysbench.rand.uniform_double()*9999.99,
 	string.rep(sysbench.rand.string("@"),24)
         )
-      res=con:bulk_insert_next(query)
+      with_retry(function() return con:bulk_insert_next(query) end)
       
    end
    end 
    end
 
-   con:bulk_insert_done()
+   with_retry(con:bulk_insert_done())
 
   end
 
