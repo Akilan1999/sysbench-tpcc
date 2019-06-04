@@ -93,6 +93,8 @@ function cmd_prepare()
    end
 
    -- make sure all tables are created before we load data
+   print("Waiting on tables 30 sec\n")
+   sleep(30)
 
    for i = sysbench.tid % sysbench.opt.threads + 1, sysbench.opt.scale,
    sysbench.opt.threads do
@@ -320,8 +322,8 @@ function create_tables(drv, con, table_num)
    con:query(query)
 
 
-   print("Waiting on tables 30 sec\n")
-   sleep(30)
+   print("Waiting on tables 15 sec\n")
+   sleep(15)
 
    con:bulk_insert_init("INSERT INTO item" .. i .." (i_id, i_im_id, i_name, i_price, i_data) values")
    for j = 1 , MAXITEMS do
@@ -336,7 +338,7 @@ function create_tables(drv, con, table_num)
       with_retry(function() return con:bulk_insert_next(query) end)
 		 
    end
-   with_retry(con:bulk_insert_done())
+   with_retry(con:bulk_insert_done)
 
     print(string.format("Adding indexes %d ... \n", i))
     con:query("CREATE INDEX idx_customer"..i.." ON customer"..i.." (c_w_id,c_d_id,c_last,c_first)")
@@ -419,7 +421,7 @@ function load_tables(drv, con, warehouse_num)
       with_retry(function() return con:bulk_insert_next(query) end)
 
 		 
-    with_retry(con:bulk_insert_done())
+    with_retry(con:bulk_insert_done)
 
     con:bulk_insert_init("INSERT IGNORE INTO district" .. table_num .. 
 	" (d_id, d_w_id, d_name, d_street_1, d_street_2, d_city, d_state, d_zip, d_tax, d_ytd, d_next_o_id) values")
@@ -434,7 +436,7 @@ function load_tables(drv, con, warehouse_num)
 
 
    end
- with_retry(con:bulk_insert_done())
+ with_retry(con:bulk_insert_done)
 
 -- CUSTOMER TABLE
 
@@ -472,7 +474,7 @@ function load_tables(drv, con, warehouse_num)
    end 
    end
 
-   with_retry(con:bulk_insert_done())
+   with_retry(con:bulk_insert_done)
 
 -- HISTORY TABLE
 
@@ -491,7 +493,7 @@ function load_tables(drv, con, warehouse_num)
    end 
    end
 
-   with_retry(con:bulk_insert_done())
+   with_retry(con:bulk_insert_done)
 
     local tab = {}
     local a_counts = {}
@@ -527,7 +529,7 @@ function load_tables(drv, con, warehouse_num)
    end 
    end
 
-   with_retry(con:bulk_insert_done())
+   with_retry(con:bulk_insert_done)
 
 -- STOCK table
 
@@ -554,7 +556,7 @@ function load_tables(drv, con, warehouse_num)
 
    end
 
-   with_retry(con:bulk_insert_done())
+   with_retry(con:bulk_insert_done)
 
 --		SELECT c_id
 --		FROM customer
@@ -595,7 +597,7 @@ function load_tables(drv, con, warehouse_num)
    end 
    end
 
-   with_retry(con:bulk_insert_done())
+   with_retry(con:bulk_insert_done)
 
   end
 
