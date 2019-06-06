@@ -41,9 +41,13 @@ DIST_PER_WARE=10
 CUST_PER_DIST=3000
 RETRY_COUNT=10
 
+function report_error( err )
+  print("ERROR:", err )
+end
+
 function with_retry(f)
   for r=1,RETRY_COUNT do
-     if ( f() == 0 ) then
+     if ( xpcall(f,report_error) ) then
        break
      end
   end
@@ -322,7 +326,7 @@ function create_tables(drv, con, table_num)
    con:query(query)
 
 
-   print("Waiting on tables 15 sec\n")
+   print("Waiting on tables 15 secfor table %d \n",table_num)
    sleep(15)
 
    con:bulk_insert_init("INSERT INTO item" .. i .." (i_id, i_im_id, i_name, i_price, i_data) values")
