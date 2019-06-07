@@ -86,6 +86,8 @@ function cmd_prepare()
    local con = drv:connect()
    local show_query="SHOW TABLES"
 
+   con:query("SET AUTOCOMMIT=1")
+
    -- if drv:name() == "mysql" then 
    --     con:query("SET FOREIGN_KEY_CHECKS=0")
    -- end
@@ -326,7 +328,7 @@ function create_tables(drv, con, table_num)
    con:query(query)
 
 
-   print("Waiting on tables 15 secfor table %d \n",table_num)
+   print("Waiting on tables 15 sec")
    sleep(15)
 
    con:bulk_insert_init("INSERT INTO item" .. i .." (i_id, i_im_id, i_name, i_price, i_data) values")
