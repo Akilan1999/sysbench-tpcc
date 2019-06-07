@@ -48,9 +48,14 @@ end
 function with_retry(f)
   for r=1,RETRY_COUNT do
      if ( xpcall(f,report_error) ) then
-       break
-     end
+       return true
+     else
+       slp = sysbench.rand.uniform(1,10)*r
+       print("Query failed sleeping for: ",slp)
+       sleep(slp*r)
+    end
   end
+  return false
 end
 
 -- Command line options
