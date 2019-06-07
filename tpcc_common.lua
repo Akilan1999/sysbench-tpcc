@@ -615,7 +615,7 @@ end
 function thread_init()
    drv = sysbench.sql.driver()
    con = drv:connect()
-   con:query("SET AUTOCOMMIT=0")
+   con:query("SET AUTOCOMMIT=1")
 
 end
 

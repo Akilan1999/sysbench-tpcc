@@ -30,7 +30,7 @@ function thread_init()
    set_isolation_level(drv,con) 
 
    if drv:name() == "mysql" then 
-     con:query("SET autocommit=0")
+     con:query("SET autocommit=1")
    end
    
 end
