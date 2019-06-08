@@ -119,6 +119,7 @@ function cmd_ensure()
    local con = drv:connect()
    local show_query="SHOW TABLES"
 
+   print("Ensuring tables on thread " .. sysbench.tid)
    con:query("SET AUTOCOMMIT=1")
 
    for i = sysbench.tid % sysbench.opt.threads + 1, sysbench.opt.scale,
@@ -437,7 +438,7 @@ function load_tables(drv, con, warehouse_num)
    print(string.format("loading tables: %d for warehouse: %d\n", table_num, warehouse_num))
 
    -- Check if this warehouse already exists. If it does then skip it 
-   local result = con:query("SELECT w_id FROM warehouse" .. table_num .. " WHERE w_id=" .. warehouse_num)
+   local result = con:query_row("SELECT w_id FROM warehouse" .. table_num .. " WHERE w_id=" .. warehouse_num)
 
    if result ~= warehouse_num then
        print(string.format("Warehouse %d already exists, skipping",warehouse_num))
