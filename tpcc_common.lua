@@ -439,7 +439,7 @@ function load_tables(drv, con, warehouse_num)
    -- Check if this warehouse already exists. If it does then skip it 
    local result = con:query("SELECT w_id FROM warehouse" .. table_num .. " WHERE w_id=" .. warehouse_num)
 
-   if result ~= nil then
+   if result ~= warehouse_num then
        print(string.format("Warehouse %d already exists, skipping",warehouse_num))
        goto continue
    end
