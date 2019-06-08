@@ -438,13 +438,11 @@ function load_tables(drv, con, warehouse_num)
    print(string.format("loading tables: %d for warehouse: %d\n", table_num, warehouse_num))
 
    -- Check if this warehouse already exists. If it does then skip it 
-   local result = con:query_row("SELECT w_id FROM warehouse" .. table_num .. " WHERE w_id=" .. warehouse_num)
+   local result = con:query_row("SELECT count(w_id) FROM warehouse" .. table_num .. " WHERE w_id=" .. warehouse_num)
 
-   if (result ~= nil) and (tonumber(result) == warehouse_num) then
+   if tonumber(result) == 1 then
        print(string.format("Warehouse %d already exists, skipping",warehouse_num))
        goto continue
-   else
-       print("Got a result of " .. result .. " ~= " .. warehouse_num)
    end
    
    con:bulk_insert_init("INSERT IGNORE INTO warehouse" .. table_num .. 
