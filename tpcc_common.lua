@@ -428,7 +428,7 @@ function load_tables(drv, con, warehouse_num)
 
    if result ~= nil then
        print(string.format("Warehouse %d already exists, skipping",warehouse_num))
-       continue
+       goto continue
    end
    
    con:bulk_insert_init("INSERT IGNORE INTO warehouse" .. table_num .. 
@@ -617,6 +617,7 @@ function load_tables(drv, con, warehouse_num)
    end
    with_retry(function() return con:bulk_insert_done() end,con)   
 
+  ::continue::
   end
 
 end
