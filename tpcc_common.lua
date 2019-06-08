@@ -443,6 +443,8 @@ function load_tables(drv, con, warehouse_num)
    if result == warehouse_num then
        print(string.format("Warehouse %d already exists, skipping",warehouse_num))
        goto continue
+   else
+       print("Got a result of " .. result .. " ~= " .. warehouse_num)
    end
    
    con:bulk_insert_init("INSERT IGNORE INTO warehouse" .. table_num .. 
