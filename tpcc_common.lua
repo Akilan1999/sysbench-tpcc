@@ -112,7 +112,19 @@ function cmd_prepare()
    sysbench.opt.threads do
      load_tables(drv, con, i)
    end
+end
 
+function cmd_ensure()
+   local drv = sysbench.sql.driver()
+   local con = drv:connect()
+   local show_query="SHOW TABLES"
+
+   con:query("SET AUTOCOMMIT=1")
+
+   for i = sysbench.tid % sysbench.opt.threads + 1, sysbench.opt.scale,
+   sysbench.opt.threads do
+     load_tables(drv, con, i)
+   end
 end
 
 -- Check consistency 
@@ -128,9 +140,10 @@ function cmd_check()
 
 end
 
--- Implement parallel prepare and prewarm commands
+-- Implement parallel prepare and ensure commands
 sysbench.cmdline.commands = {
    prepare = {cmd_prepare, sysbench.cmdline.PARALLEL_COMMAND},
+   ensure = {cmd_ensure, sysbench.cmdline.PARALLEL_COMMAND},
    check = {cmd_check, sysbench.cmdline.PARALLEL_COMMAND}
 }
 
