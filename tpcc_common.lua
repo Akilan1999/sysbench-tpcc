@@ -75,6 +75,8 @@ sysbench.cmdline.options = {
       {"Use purge transaction (yes, no)", "no"},
    report_csv =
       {"Report output in csv (yes, no)", "no"},
+   report_json =
+      {"Report output in json (yes, no)", "no"},	
    mysql_storage_engine =
       {"Storage engine, if MySQL is used", "innodb"},
    mysql_table_options =
