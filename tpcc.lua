@@ -66,7 +66,7 @@ function sysbench.hooks.report_intermediate(stat)
 -- --   print("my stat: ", val)
    if sysbench.opt.report_json == "yes" then
       sysbench.report_json(stat)
-   else if  sysbench.opt.report_csv == "yes" then
+   elseif  sysbench.opt.report_csv == "yes" then
    	sysbench.report_csv(stat)
    else
    	sysbench.report_default(stat)
@@ -77,7 +77,7 @@ function sysbench.hooks.report_cumulative(stat)
 -- --   print("my stat: ", val)
    if sysbench.opt.report_json == "yes" then
       sysbench.report_json(stat)
-   else if  sysbench.opt.report_csv == "yes" then
+   elseif  sysbench.opt.report_csv == "yes" then
    	sysbench.report_csv(stat)
    else
    	sysbench.report_default(stat)
