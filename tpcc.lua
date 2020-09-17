@@ -63,7 +63,7 @@ function sysbench.hooks.before_restart_event(err)
 end
 
 function sysbench.hooks.report_intermediate(stat)
--- --   print("my stat: ", val)
+   print("my stat: ", val)
    if sysbench.opt.report_json == "yes" then
       sysbench.report_json(stat)
    elseif  sysbench.opt.report_csv == "yes" then
@@ -74,7 +74,7 @@ function sysbench.hooks.report_intermediate(stat)
 end
 
 function sysbench.hooks.report_cumulative(stat)
--- --   print("my stat: ", val)
+   print("my stat: ", val)
    if sysbench.opt.report_json == "yes" then
       sysbench.report_json(stat)
    elseif  sysbench.opt.report_csv == "yes" then
